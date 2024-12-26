@@ -30,6 +30,7 @@ class SpaStack extends Stack {
         destinationKeyPrefix: 'web/static',
     });
 
+    // todo iam role
 
   }
 }
