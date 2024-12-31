@@ -4,6 +4,7 @@ from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Key
 import logging
 import json
+print('testing vim fugitive')
 
 # AWS Lambda Function Logging in Python - https://docs.aws.amazon.com/lambda/latest/dg/python-logging.html
 logger = logging.getLogger()
@@ -24,11 +25,11 @@ def create_item(item):
     try:
         ret = table.put_item(Item=item);
         logger.info({"operation": "create an item", "details": ret});
-        
+
     except ClientError as err:
         print(err);
         logger.debug({"operation": "item creation", "details": err});
-        
+
 
 # DynamoDB update Item from table logic
 def update_item(item, reserve):
@@ -44,7 +45,7 @@ def update_item(item, reserve):
             ReturnValues="UPDATED_NEW"
         )
         logger.info({"operation": "update an item ", "details": ret});
-        
+
     except ClientError as err:
         logger.debug({"operation": "item update", "details": err});
 
@@ -59,19 +60,19 @@ def get_item(id):
         return ret['Item'];
     except ClientError as err:
         logger.debug({"operation": "item query", "details": err});
-    
-    
+
+
 # function to handle API Gateway Lambda proxy integration event and pass DIY validation
 def api_gateway_handler(event):
     body = json.loads(event['body'])
     item = body['vehicle']
     item_id = item['id']
-    
+
     create_item(item)
     update_item(item,"yes")
-    
+
     ret = get_item(item_id)
-    
+
     api_gateway_return = {
         'statusCode': '200',
         'body' : json.dumps(ret),
@@ -79,28 +80,28 @@ def api_gateway_handler(event):
             'Content-Type': 'application/json',
         }
     }
-    
+
     return api_gateway_return
-    
+
 # Function to handle Lambda Local Test
 def local_test_handler(event):
-    item = event['vehicle']  
+    item = event['vehicle']
 
     item_id = item['id']
     create_item(item)
     update_item(item,"yes")
-        
+
     ret = get_item(item_id)
-        
-    # Uncomment the code above to print the return 
+
+    # Uncomment the code above to print the return
     # print("Return: " + json.dumps(ret, indent=2))
-    
+
     return ret
 
 
 def lambda_handler(event, context):
     ''''
-      Example JSON in event when testing locally. 
+      Example JSON in event when testing locally.
       {
         "vehicle": {
           "id": "1",
@@ -117,6 +118,6 @@ def lambda_handler(event, context):
     try:
         ret = api_gateway_handler(event)
     except:
-        ret = local_test_handler(event)    
+        ret = local_test_handler(event)
 
     return ret
