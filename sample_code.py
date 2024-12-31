@@ -4,7 +4,7 @@ from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Key
 import logging
 import json
-print('testing vim fugitive')
+print('testing vim fugitive 2')
 
 # AWS Lambda Function Logging in Python - https://docs.aws.amazon.com/lambda/latest/dg/python-logging.html
 logger = logging.getLogger()
