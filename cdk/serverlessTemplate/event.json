@@ -1,0 +1,7 @@
+{
+        'statusCode': '200',
+        'body': msg,
+        'headers': {
+            'Content-Type': 'application/json',
+        }
+}
