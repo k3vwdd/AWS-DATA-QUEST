@@ -21,24 +21,27 @@ export async function handler(event, context) {
 
     //const msg = "Template message created";
     //const queryStringParameters = event.get("queryStringParameters");
-    const msg = "Hello World"
-    return {
-        statusCode: 200,
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            message: msg
-        })
-    };
 
-    //const response = {
-    //    statusCode: 200,
-    //    body: msg,
-    //    headers: {
-    //        "Content-Type": "application/json",
-    //    },
-    //};
-
+    try {
+        const tableName = await getAppTableName();
+        return {
+            statusCode: 200,
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                message: `first table name is ${tableName}`,
+            }),
+        };
+    } catch (err) {
+        return {
+            statusCode: 500,
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                Error: err.message,
+            }),
+        };
+    }
 }
-
