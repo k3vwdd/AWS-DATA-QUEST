@@ -28,6 +28,7 @@ export function handler(event, context) {
             JSON.stringify(process.env, null, 2),
     );
 
+
     const msg = "Template message created";
 
     const response = {

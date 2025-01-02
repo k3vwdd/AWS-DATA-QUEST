@@ -1,4 +1,5 @@
 import { Stack, Duration } from "aws-cdk-lib";
+import * as cdk from "aws-cdk-lib";
 import { Function, Runtime, Code } from "aws-cdk-lib/aws-lambda";
 import { LambdaIntegration, LambdaRestApi } from "aws-cdk-lib/aws-apigateway";
 import { Role, ServicePrincipal, CompositePrincipal, PolicyStatement } from "aws-cdk-lib/aws-iam";
@@ -20,11 +21,13 @@ export class ServerlessTemplateStack extends Stack {
         super(scope, id, props);
 
         const table = new dynamodb.TableV2(this, "app_table", {
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
             partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
             tableName: "app_table",
         });
 
         const role = new Role(this, "dynamodbRole", {
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
             assumedBy: new CompositePrincipal(
                 new ServicePrincipal("lambda.amazonaws.com")
             ),
@@ -57,6 +60,7 @@ export class ServerlessTemplateStack extends Stack {
         });
 
         const api = new LambdaRestApi(this, "testHelloWorldApi", {
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
             restApiName: "testApi",
             handler: lambdaFunc,
             proxy: false,
