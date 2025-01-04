@@ -73,6 +73,8 @@ export class ServerlessTemplateStack extends Stack {
             environment: {
                 TABLE_NAME: table.tableName,
             },
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+
         });
 
         table.grantReadData(lambdaFunc);

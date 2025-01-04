@@ -73,7 +73,6 @@ export async function handler(event, context) {
             };
         }
 
-        // Get ID from query parameters
         const str_id = queryParameters.id;
         const result = await getItem(str_id);
 
