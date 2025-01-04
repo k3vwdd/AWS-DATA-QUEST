@@ -2,10 +2,7 @@ import * as cdk from "aws-cdk-lib";
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as path from "path";
-import { fileURLToPath } from "url";
 import { Construct } from "constructs";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 
 export class SqsFunStack extends cdk.Stack {

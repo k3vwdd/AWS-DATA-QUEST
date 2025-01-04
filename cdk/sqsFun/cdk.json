@@ -1,5 +1,5 @@
 {
-  "app": "npx ts-node --prefer-ts-exts bin/sqs_fun.ts",
+  "app": "npx ts-node -P tsconfig.json bin/sqs_fun.ts",
   "watch": {
     "include": [
       "**"
