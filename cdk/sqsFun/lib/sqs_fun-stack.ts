@@ -1,15 +1,29 @@
-import * as cdk from 'aws-cdk-lib';
-import * as sqs from 'aws-cdk-lib/aws-sqs';
-import { Construct } from 'constructs';
+import * as cdk from "aws-cdk-lib";
+import * as sqs from "aws-cdk-lib/aws-sqs";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as path from "path";
+import { fileURLToPath } from "url";
+import { Construct } from "constructs";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 
 export class SqsFunStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
-    super(scope, id, props);
+    constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+        super(scope, id, props);
 
+        const queue1 = new sqs.Queue(this, "Queue1", {
+            queueName: "MyMessageQueue",
+            visibilityTimeout: cdk.Duration.seconds(60),
+        });
 
-
-
-
-
- }
+        const lambdaSqsProducer = new lambda.Function(this, "producer", {
+            functionName: "producer",
+            runtime: lambda.Runtime.NODEJS_20_X,
+            timeout: cdk.Duration.seconds(60),
+            memorySize: 128,
+            handler: "index.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../assets")),
+        });
+    }
 }
