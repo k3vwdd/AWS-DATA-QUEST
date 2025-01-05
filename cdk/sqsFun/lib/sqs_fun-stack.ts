@@ -60,10 +60,12 @@ export class SqsFunStack extends cdk.Stack {
             },
         });
 
-        queue1.grantConsumeMessages(lambdaSqsProducer);
+        queue1.grantSendMessages(lambdaSqsProducer);
+        queue1.grantConsumeMessages(lambdaSqsConsumer);
         dlq.grantSendMessages(lambdaSqsProducer);
+        dlq.grantConsumeMessages(lambdaSqsConsumer);
 
-        lambdaSqsProducer.addEventSource(
+        lambdaSqsConsumer.addEventSource(
             new SqsEventSource(queue1, {
                 batchSize: 10,
             }),
