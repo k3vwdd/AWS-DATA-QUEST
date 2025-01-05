@@ -46,7 +46,6 @@ export class SqsFunStack extends cdk.Stack {
             },
         });
 
-        queue1.grantSendMessages(lambdaSqsProducer);
 
         const lambdaSqsConsumer = new lambda.Function(this, "consumer", {
             functionName: "consumer",
@@ -60,6 +59,9 @@ export class SqsFunStack extends cdk.Stack {
             },
         });
 
+        // NOT BEST PRACTICE - only for POC's this gives access to all tables.
+        lambdaSqsConsumer.role?.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonDynamoDBFullAccess'));
+
         queue1.grantSendMessages(lambdaSqsProducer);
         queue1.grantConsumeMessages(lambdaSqsConsumer);
         dlq.grantSendMessages(lambdaSqsProducer);
@@ -70,6 +72,7 @@ export class SqsFunStack extends cdk.Stack {
                 batchSize: 10,
             }),
         );
+
 
         new cdk.CfnOutput(this, "QueueUrl", {
             value: queue1.queueUrl,

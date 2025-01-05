@@ -1,14 +1,47 @@
 import { SQSClient } from "@aws-sdk/client-sqs";
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, PutItemCommand} from "@aws-sdk/client-dynamodb";
 
 const sqsClient = new SQSClient({});
 const dynamodbClient = new DynamoDBClient({});
 
 export async function handler(event, context) {
     try {
-        console.log("Received SQS event:", JSON.stringify(event, null, 2));
-        console.log("body", JSON.stringify(event.Records[0]?.body, null, 2));
-        console.log("Region", JSON.stringify(event.Records[0]?.awsRegion, null, 2));
+        //console.log("Received SQS event:", JSON.stringify(event, null, 2));
+        //console.log("body", JSON.stringify(event.Records[0]?.body, null, 2));
+        //console.log("body", JSON.stringify(event.Records, null, 2));
+
+        if (event.Records && event.Records.length > 0) {
+            for (let i = 0; i < event.Records.length; i++) {
+                try {
+                    const parsedBody = JSON.parse(event.Records[i].body);
+                    console.log("ParsedBody:", parsedBody);
+                    console.log(`Coder ID:`, parsedBody.coder_id);
+                    console.log(`Spot ID:`, parsedBody.spot_id);
+                    console.log(`Timestamp:`, parsedBody.timestamp);
+                    console.log(`Coder ID (${typeof parsedBody.coder_id}):`, parsedBody.coder_id);
+                    console.log(`Spot ID (${typeof parsedBody.spot_id}):`, parsedBody.spot_id);
+                    console.log(`Timestamp (${typeof parsedBody.timestamp}):`, parsedBody.timestamp);
+                    if (!parsedBody.coder_id) {
+                        console.log("Coder_id wasn't in the parsedBody");
+                        throw new Error("erro in format");
+                    }
+                    const command = new PutItemCommand({
+                        TableName: "checkinData",
+                        Item: {
+                            coderId: { S: parsedBody.coder_id },
+                            timestamp: { N: parsedBody.timestamp.toString() },
+                            spotId: { S: parsedBody.spot_id },
+                        },
+                    });
+
+                    const response = await dynamodbClient.send(command);
+                    console.log(response);
+                } catch (Error) {
+                    console.error(`SOMETHING WENT WRONG ERROR: => `, Error);
+                    continue;
+                }
+            }
+        }
 
         return {
             statusCode: 200,
@@ -16,8 +49,8 @@ export async function handler(event, context) {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                message: event.Records[0]?.body || "No message body found",
-                event: event,
+                message: "Records processed successfully",
+                recordCount: event.Records?.length || 0,
             }),
         };
     } catch (err) {
