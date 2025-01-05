@@ -7,7 +7,8 @@ const dynamodbClient = new DynamoDBClient({});
 export async function handler(event, context) {
     try {
         console.log("Received SQS event:", JSON.stringify(event, null, 2));
-        console.log("Just the body:", JSON.stringify(event.Records[0]?.body, null, 2));
+        console.log("body", JSON.stringify(event.Records[0]?.body, null, 2));
+        console.log("Region", JSON.stringify(event.Records[0]?.awsRegion, null, 2));
 
         return {
             statusCode: 200,
