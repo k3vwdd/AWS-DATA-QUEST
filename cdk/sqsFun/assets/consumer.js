@@ -23,7 +23,8 @@ export async function handler(event, context) {
                     console.log(`Timestamp (${typeof parsedBody.timestamp}):`, parsedBody.timestamp);
                     if (!parsedBody.coder_id) {
                         console.log("Coder_id wasn't in the parsedBody");
-                        throw new Error("erro in format");
+                        //throw new Error("error in recieved format");
+                        return false;
                     }
                     const command = new PutItemCommand({
                         TableName: "checkinData",
@@ -38,7 +39,8 @@ export async function handler(event, context) {
                     console.log(response);
                 } catch (Error) {
                     console.error(`SOMETHING WENT WRONG ERROR: => `, Error);
-                    continue;
+                    //throw Error
+                    return false;
                 }
             }
         }
