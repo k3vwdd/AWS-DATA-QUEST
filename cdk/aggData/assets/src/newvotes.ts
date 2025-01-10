@@ -1,4 +1,9 @@
 import { Context, DynamoDBStreamEvent, DynamoDBRecord } from "aws-lambda";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { UpdateCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+
+const client = new DynamoDBClient({});
+const docClient = DynamoDBDocumentClient.from(client);
 
 function check_record_pattern(record: DynamoDBRecord) {
     if (record.dynamodb && record.dynamodb.NewImage) {
@@ -17,10 +22,23 @@ export async function handler(event: DynamoDBStreamEvent) {
             if (check_record_pattern(record)) {
                 const improvement = record.dynamodb?.NewImage?.improvement.S;
                 const region = record.dynamodb?.NewImage?.region.S;
-                console.log(`Vote for ${improvement} from ${region}`);
+                console.log(`Vote for ${improvement} from region ${region}`);
+
+                const command = new UpdateCommand({
+                    TableName: "total_votes",
+                    Key: {
+                        improvement: improvement,
+                        region: region,
+                    },
+                    UpdateExpression: "ADD total_votes :votevalue",
+                    ExpressionAttributeValues: {
+                        ":votevalue": 1,
+                    },
+                });
+                const response = await docClient.send(command);
+                console.log(response);
             }
         }
-
         return `Successfully processed ${event.Records.length} records.`;
     } catch (error) {
         console.error("Error processing records:", error);

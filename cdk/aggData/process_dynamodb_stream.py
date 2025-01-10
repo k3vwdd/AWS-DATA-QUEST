@@ -33,16 +33,16 @@ def lambda_handler(event, context):
             # For boto3 update_item check
             # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/dynamodb.html#DynamoDB.Table.update_item
 
-            #table = dynamodb.Table('total_votes')
-            #table.update_item(
-            #    Key={
-            #        'improvement': improvement,
-            #        'region': region
-            #    },
-            #    UpdateExpression="ADD total_votes :votevalue",
-            #    ExpressionAttributeValues={
-            #        ':votevalue': 1
-            #    }
-            #)
+            table = dynamodb.Table('total_votes')
+            table.update_item(
+                Key={
+                    'improvement': improvement,
+                    'region': region
+                },
+                UpdateExpression="ADD total_votes :votevalue",
+                ExpressionAttributeValues={
+                    ':votevalue': 1
+                }
+            )
 
     return 'Successfully processed {} records.'.format(len(event['Records']))

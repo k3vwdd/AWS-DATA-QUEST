@@ -6,7 +6,6 @@ import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as eventsources from "aws-cdk-lib/aws-lambda-event-sources";
 
-
 export class AggDataStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
@@ -17,6 +16,20 @@ export class AggDataStack extends cdk.Stack {
                 type: dynamodb.AttributeType.STRING,
             },
             tableName: "votes",
+            dynamoStream: dynamodb.StreamViewType.NEW_IMAGE,
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+        });
+
+        const totalVotes = new dynamodb.TableV2(this, "totalVotesConstruct", {
+            partitionKey: {
+                name: "region",
+                type: dynamodb.AttributeType.STRING,
+            },
+            sortKey: {
+                name: "improvement",
+                type: dynamodb.AttributeType.STRING,
+            },
+            tableName: "total_votes",
             dynamoStream: dynamodb.StreamViewType.NEW_IMAGE,
             removalPolicy: cdk.RemovalPolicy.DESTROY,
         });
@@ -35,23 +48,39 @@ export class AggDataStack extends cdk.Stack {
             },
         });
 
-        newVotes.addEventSource(new eventsources.DynamoEventSource(votesTable, {
-            startingPosition: lambda.StartingPosition.LATEST,
-            enabled: true,
-            batchSize: 100,
-            maxBatchingWindow:  cdk.Duration.seconds(1),
-        }))
 
-        const servicePolicy = new iam.Policy(this, "dynamodbstreams-freePolicy", {
-            policyName: "dynamodbstreams-free",
-            statements: [
-                new iam.PolicyStatement({
-                    effect: iam.Effect.ALLOW,
-                    actions: ["cloudwatch:*", "dynamodb:*", "logs:*"],
-                    resources: ["*"],
-                }),
-            ],
-        });
+        newVotes.addEventSource(
+            new eventsources.DynamoEventSource(votesTable, {
+                startingPosition: lambda.StartingPosition.LATEST,
+                enabled: true,
+                batchSize: 100,
+                maxBatchingWindow: cdk.Duration.seconds(1),
+            }),
+        );
+
+        newVotes.addEventSource(
+            new eventsources.DynamoEventSource(totalVotes, {
+                startingPosition: lambda.StartingPosition.LATEST,
+                enabled: true,
+                batchSize: 100,
+                maxBatchingWindow: cdk.Duration.seconds(1),
+            }),
+        );
+
+        const servicePolicy = new iam.Policy(
+            this,
+            "dynamodbstreams-freePolicy",
+            {
+                policyName: "dynamodbstreams-free",
+                statements: [
+                    new iam.PolicyStatement({
+                        effect: iam.Effect.ALLOW,
+                        actions: ["cloudwatch:*", "dynamodb:*", "logs:*"],
+                        resources: ["*"],
+                    }),
+                ],
+            },
+        );
 
         newVotes.role?.attachInlinePolicy(servicePolicy);
     }
