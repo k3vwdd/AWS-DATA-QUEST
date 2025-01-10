@@ -1,58 +1,46 @@
 {
-  "compilerOptions": {
-    // Runtime environment
-    "target": "ES2020",
-    "module": "commonjs",
-    "lib": ["ES2020", "DOM"],
-    "moduleResolution": "node",
+    "compilerOptions": {
+        // Runtime environment
+        "target": "ES2020",
+        "module": "commonjs",
+        "lib": ["ES2020", "DOM"],
+        "moduleResolution": "node",
 
-    // Strict type checking
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictBindCallApply": true,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
+        // Strict type checking
+        "strict": true,
+        "noImplicitAny": true,
+        "strictNullChecks": true,
+        "strictFunctionTypes": true,
+        "strictBindCallApply": true,
+        "noImplicitThis": true,
+        "alwaysStrict": true,
 
-    // Module resolution
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./*"]
+        // Module resolution
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["./*"]
+        },
+        "esModuleInterop": true,
+        "resolveJsonModule": true,
+
+        // Build options
+        "outDir": "dist", // Just dist, not dist/src
+        "rootDir": "src",
+        "sourceMap": true,
+        "removeComments": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+
+        // Additional checks
+        "noUnusedLocals": false,
+        "noUnusedParameters": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+
+        // Type definitions - Updated to include parent node_modules
+        "typeRoots": ["../node_modules/@types", "./node_modules/@types"],
+        "types": ["node", "aws-lambda"]
     },
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-
-    // Build options
-    "outDir": "dist",
-    "rootDir": ".",
-    "sourceMap": true,
-    "removeComments": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-
-    // Additional checks
-    "noUnusedLocals": false,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-
-    // Type definitions - Updated to include parent node_modules
-    "typeRoots": [
-      "../node_modules/@types",
-      "./node_modules/@types"
-    ],
-    "types": [
-      "node",
-      "aws-lambda"
-    ]
-  },
-  "include": [
-    "**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "**/*.test.ts"
-  ]
+    "include": ["**/*.ts"],
+    "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }
