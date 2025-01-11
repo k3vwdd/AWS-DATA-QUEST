@@ -24,9 +24,6 @@ export class ParallelDataProcessingStack extends cdk.Stack {
             code: lambda.Code.fromAsset(
                 path.join(__dirname, "../assets/dist/"),
             ),
-            environment: {
-                TABLE_NAME: votesTable.tableName,
-            },
         });
 
         const couponService = new lambda.Function(this, "couponServiceFunc", {
@@ -38,9 +35,6 @@ export class ParallelDataProcessingStack extends cdk.Stack {
             code: lambda.Code.fromAsset(
                 path.join(__dirname, "../assets/dist/"),
             ),
-            environment: {
-                TABLE_NAME: votesTable.tableName,
-            },
         });
     }
 }
