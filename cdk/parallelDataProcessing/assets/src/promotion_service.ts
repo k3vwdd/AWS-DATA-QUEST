@@ -10,10 +10,17 @@ export async function handler(event: SNSEvent): Promise<void> {
 
 async function processSnsMessage(record: SNSEventRecord) {
     try {
-        const message: string = JSON.stringify(record.Sns.Message);
-        console.log(`[Service] Account service recieved message: ${JSON.parse(message)}`);
+        const message = JSON.parse(record.Sns.Message);
+        const distance: number = message.distance;
+        console.log(`[Service] Promotion service recieved message: ${JSON.stringify(message)}`);
+        if (distance < 10) {
+            console.log("The distance is less then 10 miles");
+        }
+        console.log(`${distance}`);
     } catch (error) {
         console.error("Error processing records:", error);
         throw error;
     }
 }
+
+

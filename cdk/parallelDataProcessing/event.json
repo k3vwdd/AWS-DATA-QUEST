@@ -3,26 +3,22 @@
     {
       "EventSource": "aws:sns",
       "EventVersion": "1.0",
-      "EventSubscriptionArn": "arn:aws:sns:us-east-1::ExampleTopic",
+      "EventSubscriptionArn": "arn:aws:sns:us-east-1:950033952142:rideshare_topic:53dd287e-9af2-4586-b740-4ce658457513",
       "Sns": {
         "Type": "Notification",
-        "MessageId": "95df01b4-ee98-5cb9-9903-4c221d41eb5e",
-        "TopicArn": "arn:aws:sns:us-east-1:123456789012:ExampleTopic",
-        "Subject": "example subject",
-        "Message": "example message",
-        "Timestamp": "1970-01-01T00:00:00.000Z",
+        "MessageId": "7b5c49af-f10b-5ab1-9450-16532db330c4",
+        "TopicArn": "arn:aws:sns:us-east-1:950033952142:rideshare_topic",
+        "Subject": "03",
+        "Message": "{\n  \"customer_id\": \"customer02\",\n  \"distance\": 9,\n  \"coupon\"  : \"3423-discount-01\",\n  \"timestamp\": \"1595877319\",\n  \"cost\"    : 32.90,\n  \"return_area_id\": \"123\"\n}",
+        "Timestamp": "2025-01-11T20:54:16.852Z",
         "SignatureVersion": "1",
-        "Signature": "EXAMPLE",
-        "SigningCertUrl": "EXAMPLE",
-        "UnsubscribeUrl": "EXAMPLE",
+        "Signature": "P6+jdaIrVb0h55NXAZUDYfypJYuVUgGoq4Rr0uSSZlShiJm+2M7pauqvfZYjBBEiVOMiOZ4FOREcH06OIuT63ZrbwslsirZVBbUyaXQeDfK3LyZtFhrf0Qi8TvjR6lMpoRoQqlkswkd64DmvwcDGJGI31WVH054ubttlOiTGsaNj9OKWyC1ROoQo48Ayn3YgIcSkiV5eReYXSUVZMox258RBr1sH4CPq6ug+2/4UKhvapJKLPIXZwlZ4mbwdF8jjfV9/bR9eqznZpyr7TqyUrBHCFSsFbRNTTFKvA9lo1FWLlLm5yq0DAosUzagpQFIgMQL3zNNroPd70SWWQD84fQ==",
+        "SigningCertUrl": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-9c6465fa7f48f5cacd23014631ec1136.pem",
+        "UnsubscribeUrl": "https://sns.us-east-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-east-1:950033952142:rideshare_topic:53dd287e-9af2-4586-b740-4ce658457513",
         "MessageAttributes": {
-          "Test": {
+          "distance": {
             "Type": "String",
-            "Value": "TestString"
-          },
-          "TestBinary": {
-            "Type": "Binary",
-            "Value": "TestBinary"
+            "Value": "9"
           }
         }
       }

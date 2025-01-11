@@ -11,7 +11,8 @@
     "cdk": "cdk",
     "build:lambda": "tsc -p assets/tsconfig.json",
     "watch:lambda": "tsc -w -p assets/tsconfig.json",
-    "deploy": "npm run build:lambda && cdk synth && cdk deploy"
+    "deploy": "npm run build:lambda && cdk synth && cdk deploy",
+    "synth": "npm run build:lambda && cdk synth"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.147",
