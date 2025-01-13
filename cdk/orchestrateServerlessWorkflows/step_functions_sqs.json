@@ -1,0 +1,103 @@
+{
+  "Comment": "A Hello World example of the Amazon States Language using Pass states",
+  "StartAt": "Parallel State",
+  "States": {
+    "Parallel State": {
+      "Type": "Parallel",
+      "ResultPath": "$.analysis",
+      "Branches": [
+        {
+          "StartAt": "EvaluateImageContent",
+          "States": {
+            "EvaluateImageContent": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:us-east-1:944588220268:function:rekognition_helper",
+              "End": true,
+              "InputPath": "$.s3_info",
+              "ResultPath": "$.result.image_analysis",
+              "OutputPath": "$.result"
+            }
+          }
+        },
+        {
+          "StartAt": "EvaluateMessageContent",
+          "States": {
+            "EvaluateMessageContent": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:us-east-1:944588220268:function:comprehend_helper",
+              "End": true,
+              "InputPath": "$.message",
+              "ResultPath": "$.result.message_analysis",
+              "OutputPath": "$.result"
+            }
+          }
+        }
+      ],
+      "Next": "ModerateOrNotModerate"
+    },
+    "ModerateOrNotModerate": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Or": [
+            {
+              "Variable": "$.analysis[0].image_analysis.safe_content",
+              "BooleanEquals": false
+            },
+            {
+              "Variable": "$.analysis[1].message_analysis.sentiment ",
+              "StringEquals": "NEGATIVE"
+            },
+            {
+              "Variable": "$.analysis[1].message_analysis.sentiment ",
+              "StringEquals": "NEUTRAL"
+            },
+            {
+              "Variable": "$.analysis[1].message_analysis.sentiment ",
+              "StringEquals": "MIXED"
+            }
+          ],
+          "Next": "DoSomeModeration"
+        }
+      ],
+      "Default": "ShowComment"
+    },
+    "DoSomeModeration": {
+      "Type": "Pass",
+      "Next": "IntoDynamoDB"
+    },
+    "ShowComment": {
+      "Type": "Pass",
+      "Next": "SendToQueue"
+    },
+    "SendToQueue": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sqs:sendMessage",
+      "Next": "IntoDynamoDB",
+      "OutputPath": "$",
+      "ResultPath": "$.queue_response",
+      "Parameters": {
+        "QueueUrl": "https://sqs.us-east-1.amazonaws.com/944588220268/sendMessage",
+        "MessageBody.$": "$"
+      }
+    },
+    "IntoDynamoDB": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:putItem",
+      "Parameters": {
+        "TableName": "comments",
+        "Item": {
+          "id.$": "$$.Execution.Name",
+          "comment.$": "$.message.content",
+          "bucket.$": "$.s3_info.bucket",
+          "key.$": "$.s3_info.key",
+          "safe_content": {
+            "BOOL.$": "$.analysis[0].image_analysis.safe_content"
+          },
+          "sentiment.$": "$.analysis[1].message_analysis.sentiment"
+        }
+      },
+      "End": true
+    }
+  }
+}

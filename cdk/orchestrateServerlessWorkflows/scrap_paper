@@ -1,0 +1,27 @@
+Arns of functions needed for step function in json
+-----------------------------------------------
+arn:aws:lambda:us-east-1:944588220268:function:process_s3_event
+-------Needed for the process_s3_event function to point the stateMachine created => arn:aws:states:us-east-1:944588220268:stateMachine:MyStateMachine-0q75mcg0p
+
+arn:aws:lambda:us-east-1:944588220268:function:rekognition_helper
+arn:aws:lambda:us-east-1:944588220268:function:comprehend_helper
+
+
+Lab commands reference
+----------------------
+Negative:
+aws s3 cp guitar.png s3://lab-bucket-de569280 --metadata '{"message":"I hate this song and the band"}'
+
+Positive:
+aws s3 cp drum.png s3://lab-bucket-de569280 --metadata '{"message":"I love this song and the band"}'
+
+Step function role access
+------------------------
+AmazonDynamoDBFullAccess
+AmazonRekognitionFullAccess
+AmazonS3FullAccess
+AmazonSQSFullAccess
+AWSLambda_FullAccess
+AWSStepFunctionsFullAccess
+CloudWatchLogsFullAccess
+ComprehendFullAccess
