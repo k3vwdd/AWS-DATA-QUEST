@@ -29,6 +29,28 @@ export class OrchestrateServerlessWorkflowsStack extends cdk.Stack {
             }
         });
 
+        const rekognitionHelper = new lambda.Function(this, "rekogntion_helper", {
+            functionName: "rekogntion_helper",
+            runtime: lambda.Runtime.NODEJS_22_X,
+            timeout: cdk.Duration.seconds(60),
+            memorySize: 128,
+            handler: "process_s3_event.handler",
+            code: lambda.Code.fromAsset(
+                path.join(__dirname, "../assets/dist/")
+            ),
+        });
+
+        const comprehendHelper = new lambda.Function(this, "comprehend_helper", {
+            functionName: "comprehend_helper",
+            runtime: lambda.Runtime.NODEJS_22_X,
+            timeout: cdk.Duration.seconds(60),
+            memorySize: 128,
+            handler: "comprehend_helper.handler",
+            code: lambda.Code.fromAsset(
+                path.join(__dirname, "../assets/dist/")
+            ),
+        });
+
         labBucket.addEventNotification(s3.EventType.OBJECT_CREATED, new s3n.LambdaDestination(processS3Event));
 
         const servicePolicy = new iam.Policy(this,"serviceRolePolicy", {
@@ -78,13 +100,7 @@ export class OrchestrateServerlessWorkflowsStack extends cdk.Stack {
                                 "sns:Subscribe",
                                 "sns:Unsubscribe",
                                 "sns:SetTopicAttributes",
-                                "lambda:CreateFunction",
-                                "lambda:ListFunctions",
-                                "lambda:ListEventSourceMappings",
-                                "lambda:CreateEventSourceMapping",
-                                "lambda:DeleteEventSourceMapping",
-                                "lambda:GetFunctionConfiguration",
-                                "lambda:DeleteFunction",
+                                "lambda:*",
                                 "resource-groups:ListGroups",
                                 "resource-groups:ListGroupResources",
                                 "resource-groups:GetGroup",
@@ -117,6 +133,8 @@ export class OrchestrateServerlessWorkflowsStack extends cdk.Stack {
         );
 
         processS3Event.role?.attachInlinePolicy(servicePolicy);
+        rekognitionHelper.role?.attachInlinePolicy(servicePolicy);
+        comprehendHelper.role?.attachInlinePolicy(servicePolicy);
 
 
     }
