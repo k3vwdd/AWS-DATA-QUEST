@@ -1,5 +1,6 @@
 import { S3Event, S3EventRecord } from "aws-lambda";
-import { GetObjectCommand, HeadObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { HeadObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { SFNClient, StartExecutionCommand } from "@aws-sdk/client-sfn";
 
 export async function handler(event: S3Event): Promise<void> {
     console.log("Event recieved:", JSON.stringify(event, null, 2));
@@ -10,29 +11,43 @@ export async function handler(event: S3Event): Promise<void> {
 }
 
 async function processS3Event(record: S3EventRecord) {
-    const client = new S3Client({});
+    const s3Client = new S3Client({});
+    const sFNClient = new SFNClient({});
+    const bucket = record.s3.bucket.name;
+    const key = record.s3.object.key;
     try {
-        const bucket = record.s3.bucket.name;
-        const key = record.s3.object.key;
-        const object = new GetObjectCommand({
-            Bucket: bucket,
-            Key: key,
-        });
-        const responseMetadata = new HeadObjectCommand({
-            Bucket: bucket,
-            Key: key,
-        });
+        const input = {
+             Bucket: bucket,
+             Key: key,
+        }
+        const s3Command = new HeadObjectCommand(input);
+        const response = await s3Client.send(s3Command);
 
-        // need metaData logic to pull the message from
-        // aws s3 cp guitar.png s3://lab-bucket-de569280 --metadata '{"message":"I hate this song and the band"}'
+        console.log("----- Metadata from S3 ----");
+        console.log(`MetaData: ${JSON.stringify(response?.Metadata)}`);
 
-        const objectResponse =  await client.send(object);
-        const objBodyContents = await objectResponse.Body?.transformToString();
-        console.log(`Object Response: ${objBodyContents}`)
-        console.log(`MetaDAta Object Response: ${JSON.stringify(responseMetadata)}`);
-        console.log(`Bucket name: ${bucket} \nKey value: ${key}`);
-
-
+        const responseMetadata = response?.Metadata;
+        if (responseMetadata && responseMetadata.message) {
+            const inputStep = {
+                "s3_info": {
+                    "bucket": bucket,
+                    "key": key
+                },
+                "message": {
+                    "content": responseMetadata.message
+                }
+            }
+            console.log(`Will start Step function with Input:  ${JSON.stringify(inputStep)}`);
+            const stateMachineInput = {
+               stateMachineArn: "arn:aws:states:us-east-1:950033952142:stateMachine:MyStateMachine-x3r3n7izj",
+               //name: "STRING_VALUE",
+               input: JSON.stringify(inputStep),
+            };
+            const stateMachineCommand = new StartExecutionCommand(stateMachineInput);
+            const stateMachineResponse = await sFNClient.send(stateMachineCommand);
+        } else {
+            console.log("No metadata found in s3 image");
+        }
     } catch (error) {
         console.error("Error processing S3 Records:", error);
         throw error;
