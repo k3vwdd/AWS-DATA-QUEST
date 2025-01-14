@@ -2,11 +2,24 @@ import { S3Event, S3EventRecord } from "aws-lambda";
 import { GetObjectCommand, HeadObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { SFNClient, StartExecutionCommand } from "@aws-sdk/client-sfn";
 
-export async function handler(event: S3Event): Promise<void> {
-    console.log("Event received:", event);
+interface StepFunctionInput {
+    s3_info: {
+        bucket: string;
+        key: string;
+    };
+    message: {
+        content: string;
+    }
+}
 
-    for (const record of event.Records) {
-        await processS3Event(record);
+export async function handler(event: S3Event | StepFunctionInput): Promise<void | StepFunctionInput> {
+    console.log("Event received:", event);
+    if ("Records" in event) {
+        for (const record of event.Records) {
+            await processS3Event(record);
+        }
+    } else {
+        return event;
     }
 }
 
@@ -47,7 +60,7 @@ async function processS3Event(record: S3EventRecord) {
             console.log('Will start Step function with Input:', JSON.stringify(inputStep));
 
             const stateMachineCommand = new StartExecutionCommand({
-                stateMachineArn: '<Step Functions ARN>',
+                stateMachineArn: 'arn:aws:states:us-east-1:950033952142:stateMachine:MyStateMachine-x3r3n7izj',
                 input: JSON.stringify(inputStep)
             });
 

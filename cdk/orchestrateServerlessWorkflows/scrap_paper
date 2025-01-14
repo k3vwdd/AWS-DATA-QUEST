@@ -1,11 +1,10 @@
 Arns of functions needed for step function in json
 -----------------------------------------------
-arn:aws:lambda:us-east-1:944588220268:function:process_s3_event
--------Needed for the process_s3_event function to point the stateMachine created => arn:aws:states:us-east-1:944588220268:stateMachine:MyStateMachine-0q75mcg0p
+arn:aws:lambda:us-east-1:898936795362:function:process_s3_event
+-------Needed-------Needed for the process_s3_event function to point the stateMachine created => arn:aws:states:us-east-1:944588220268:stateMachine:MyStateMachine-0q75mcg0p
 
-arn:aws:lambda:us-east-1:944588220268:function:rekognition_helper
-arn:aws:lambda:us-east-1:944588220268:function:comprehend_helper
-
+arn:aws:lambda:us-east-1:898936795362:function:rekognition_helper
+arn:aws:lambda:us-east-1:898936795362:function:comprehend_helper
 
 Lab commands reference
 ----------------------

@@ -5,29 +5,22 @@ import {
 
 type Sentiment = "POSITIVE" | "NEGATIVE" | "NEUTRAL" | "MIXED";
 
-interface stepFunctionEvent {
-    s3_info: {
-        bucket: string;
-        kety: string;
-    };
-    message: {
-        content: string;
-    };
+interface MessageContent {
+    content: string;
 }
 
 enum ComprehendLanguageCode {
     English = "en",
 }
 
-export async function handler(
-    event: stepFunctionEvent,
-): Promise<{ sentiment: Sentiment }> {
+const client = new ComprehendClient({});
+
+export async function handler(event: MessageContent): Promise<{ sentiment: Sentiment  }> {
     console.log("Event recieved:", JSON.stringify(event, null, 2));
 
-    const client = new ComprehendClient({});
     try {
         const input = {
-            Text: event.message.content,
+            Text: event.content,
             LanguageCode: ComprehendLanguageCode.English,
         };
         const command = new DetectSentimentCommand(input);
@@ -38,10 +31,12 @@ export async function handler(
         }
 
         return {
-            sentiment: response.Sentiment as Sentiment,
+                sentiment: response.Sentiment as Sentiment,
         };
     } catch (error) {
         console.error("Error processing:", error);
-        return { sentiment: "NEUTRAL" };
+        return {
+                sentiment: "NEUTRAL",
+        };
     }
 }
