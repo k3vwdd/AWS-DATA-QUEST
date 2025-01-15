@@ -8,10 +8,15 @@ interface S3Input {
     key: string;
 }
 
-console.log("Initializing RekognitionClient...");
+interface Result {
+    image_analysis: {
+        safe_content: boolean;
+    }
+}
+
 const client = new RekognitionClient({});
 
-export async function handler(event: S3Input): Promise<{safe_content: boolean} > {
+export async function handler(event: S3Input): Promise<Result> {
     try {
         const input = {
             Image: {
@@ -21,25 +26,20 @@ export async function handler(event: S3Input): Promise<{safe_content: boolean} >
                 },
             },
         };
-
         const command = new DetectModerationLabelsCommand(input);
         const response = await client.send(command);
-        const moderationLabels = response?.ModerationLabels ?? null;
-
-        if (!moderationLabels) {
-            return {
-                safe_content: true
+        const moderationLabels = response?.ModerationLabels ?? [];
+        return {
+            image_analysis: {
+                safe_content: moderationLabels.length === 0
             }
-        } else {
-            return {
-                safe_content: false
-            }
-        }
-
+        };
     } catch (error) {
         console.error("Error occurred:", error);
         return {
+            image_analysis: {
                 safe_content: false
             }
         };
+    }
 }
