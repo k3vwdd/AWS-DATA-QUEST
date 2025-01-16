@@ -4,12 +4,21 @@ import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 import * as path from "path";
 
 export class OrchestrateServerlessWorkflowsStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
+
+        const dbTableBucket = new dynamodb.Table(this, "dbTableBucket", {
+            tableName: "Tables",
+            partitionKey:  {
+                name: "id",
+                type: dynamodb.AttributeType.STRING
+            }
+        });
 
         const labBucket = new s3.Bucket(this, "lab-bucket-stepfunctions", {
             removalPolicy: cdk.RemovalPolicy.DESTROY,
@@ -136,6 +145,7 @@ export class OrchestrateServerlessWorkflowsStack extends cdk.Stack {
         rekognitionHelper.role?.attachInlinePolicy(servicePolicy);
         comprehendHelper.role?.attachInlinePolicy(servicePolicy);
 
+        new cdk.CfnOutput(this, 'Table', { value: dbTableBucket.tableArn });
 
     }
 }

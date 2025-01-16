@@ -5,7 +5,15 @@ import {
 
 const client = new RekognitionClient({});
 
-export async function handler(event: any) {
+export interface S3Info {
+    bucket: string;
+    key: string;
+}
+
+export interface Process_S3_event {
+    s3_info: S3Info;
+}
+export async function handler(event: Process_S3_event) {
     console.log("Event recieved from rek:", event);
     const image = {
         S3Object: {
