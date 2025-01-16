@@ -3,43 +3,30 @@ import {
     RekognitionClient,
 } from "@aws-sdk/client-rekognition";
 
-interface S3Input {
-    bucket: string;
-    key: string;
-}
-
-interface Result {
-    image_analysis: {
-        safe_content: boolean;
-    }
-}
-
 const client = new RekognitionClient({});
 
-export async function handler(event: S3Input): Promise<Result> {
-    try {
-        const input = {
-            Image: {
-                S3Object: {
-                    Bucket: event.bucket,
-                    Name: event.key,
-                },
-            },
-        };
-        const command = new DetectModerationLabelsCommand(input);
-        const response = await client.send(command);
-        const moderationLabels = response?.ModerationLabels ?? [];
+export async function handler(event: any) {
+    console.log("Event recieved from rek:", event);
+    const image = {
+        S3Object: {
+            Bucket: event.s3_info.bucket,
+            Name: event.s3_info.key,
+        },
+    };
+    const response = await client.send(
+        new DetectModerationLabelsCommand({
+            Image: image,
+        }),
+    );
+    console.log(response);
+    const moderationLabels = response.ModerationLabels ?? [];
+    if (moderationLabels.length === 0) {
         return {
-            image_analysis: {
-                safe_content: moderationLabels.length === 0
-            }
+            safe_content: true,
         };
-    } catch (error) {
-        console.error("Error occurred:", error);
+    } else {
         return {
-            image_analysis: {
-                safe_content: false
-            }
+            safe_content: false,
         };
     }
 }

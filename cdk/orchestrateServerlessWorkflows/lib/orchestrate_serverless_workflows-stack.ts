@@ -30,11 +30,11 @@ export class OrchestrateServerlessWorkflowsStack extends cdk.Stack {
         });
 
         const rekognitionHelper = new lambda.Function(this, "rekogntion_helper", {
-            functionName: "rekogntion_helper",
+            functionName: "rekognition_helper",
             runtime: lambda.Runtime.NODEJS_22_X,
             timeout: cdk.Duration.seconds(60),
             memorySize: 128,
-            handler: "process_s3_event.handler",
+            handler: "rekognition_helper.handler",
             code: lambda.Code.fromAsset(
                 path.join(__dirname, "../assets/dist/")
             ),
