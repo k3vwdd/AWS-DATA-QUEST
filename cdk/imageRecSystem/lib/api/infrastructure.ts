@@ -30,7 +30,7 @@ export class APIStack extends cdk.Stack {
             timeout: cdk.Duration.seconds(60),
             memorySize: 128,
             handler: "getSaveImage.handler",
-            code: lambda.Code.fromAsset(path.join(__dirname, "../assets/dist/ImageGetAndSaveLambda")),
+            code: lambda.Code.fromAsset(path.join(__dirname, "../../assets/dist/ImageGetAndSaveLambda/")),
             environment: {
                 'BUCKET_NAME': bucket.bucketName
             }
@@ -58,7 +58,9 @@ export class APIStack extends cdk.Stack {
             visibilityTimeout: cdk.Duration.seconds(60),
         });
 
-        const sqsSubscription = new snsSubs.SqsSubscription(uploadQueue);
+        const sqsSubscription = new snsSubs.SqsSubscription(uploadQueue, {
+            rawMessageDelivery: true,
+        });
 
         const uploadEventTopic = new sns.Topic(this, "uploadedImageTopic", {});
 
@@ -71,7 +73,6 @@ export class APIStack extends cdk.Stack {
             value: uploadQueue.queueUrl,
             exportName: "uploadQueueUrl",
         });
-
 
         new cdk.CfnOutput(this, "uploadQueueArn", {
             value: uploadQueue.queueArn,
