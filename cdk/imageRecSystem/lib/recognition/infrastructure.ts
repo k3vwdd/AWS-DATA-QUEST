@@ -9,16 +9,13 @@ import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as path from "path";
 import { Construct } from "constructs";
 
-interface RekognitionStackProps extends cdk.StackProps {
-    sqsQueue: sqs.IQueue;
-    sqsUrl: string;
-    sqsArn: string;
-    snsArn: string;
-}
-
 export class RekognitionStack extends cdk.Stack {
-    constructor(scope: Construct, id: string, props?: RekognitionStackProps) {
+    constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
+
+        const importedSqsUrl = cdk.Fn.importValue("uploadQueueUrl");
+        const importedSqsArn = cdk.Fn.importValue("uploadQueueArn");
+        const importedSnsArn = cdk.Fn.importValue("uploadSnsArn");
 
         iam.Role.customizeRoles(this, {
             usePrecreatedRoles: {
@@ -50,12 +47,14 @@ export class RekognitionStack extends cdk.Stack {
             code: lambda.Code.fromAsset(path.join(__dirname, "../../assets/dist/imageRecognitionLambda/")),
             environment: {
                 "TABLE_NAME": table.tableName,
-                "SQS_QUEUE_URL": props?.sqsUrl!,
-                "TOPIC_ARN": props?.sqsArn!,
+                "SQS_QUEUE_URL": importedSqsUrl,
+                "TOPIC_ARN": importedSnsArn,
             }
 
         });
 
-        lambdaFunctionImageRec.addEventSource( new eventsources.SqsEventSource(props?.sqsQueue!));
+        lambdaFunctionImageRec.addEventSourceMapping("ImgRekognitionLambda", {
+            eventSourceArn: importedSqsArn,
+        });
     }
 }

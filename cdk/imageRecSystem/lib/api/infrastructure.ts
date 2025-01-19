@@ -11,6 +11,7 @@ import * as path from "path";
 import { Construct } from "constructs";
 
 export class APIStack extends cdk.Stack {
+
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
 
@@ -54,6 +55,7 @@ export class APIStack extends cdk.Stack {
 
         api.root.addMethod("GET", getImageIntegration);
 
+
         const uploadQueue = new sqs.Queue(this, "uploadedImageQueue", {
             visibilityTimeout: cdk.Duration.seconds(60),
         });
@@ -69,6 +71,11 @@ export class APIStack extends cdk.Stack {
         bucket.addEventNotification(s3.EventType.OBJECT_CREATED_PUT, new s3n.SnsDestination(uploadEventTopic));
 
 
+        new cdk.CfnOutput(this, "apiUrl", {
+            value: api.url,
+            exportName: "apiUrl",
+        });
+
         new cdk.CfnOutput(this, "uploadQueueUrl", {
             value: uploadQueue.queueUrl,
             exportName: "uploadQueueUrl",
@@ -79,6 +86,10 @@ export class APIStack extends cdk.Stack {
             exportName: "uploadQueueArn",
         });
 
+        new cdk.CfnOutput(this, "uploadSnsArn", {
+            value: uploadEventTopic.topicArn,
+            exportName: "uploadSnsArn",
+        });
 
     }
 }
