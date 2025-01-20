@@ -1,10 +1,7 @@
 import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
-import * as s3 from "aws-cdk-lib/aws-s3";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as eventsources from "aws-cdk-lib/aws-lambda-event-sources";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
-import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as path from "path";
 import { Construct } from "constructs";
@@ -15,14 +12,12 @@ export class RekognitionStack extends cdk.Stack {
 
         const importedSqsUrl = cdk.Fn.importValue("uploadQueueUrl");
         const importedSqsArn = cdk.Fn.importValue("uploadQueueArn");
-        const importedSnsArn = cdk.Fn.importValue("uploadSnsArn");
+        const importedSnsArn = cdk.Fn.importValue("snsArn");
 
         iam.Role.customizeRoles(this, {
             usePrecreatedRoles: {
-                "RekognitionStack/imageRecognition/ServiceRole":
-                    "cdk-rekognition-role",
-                "RekognitionStack/ListImagesLambda/ServiceRole":
-                    "cdk-rekognition-role",
+                "RekognitionStack/imageRecognition/ServiceRole": "cdk-rekognition-role",
+                "RekognitionStack/listImages/ServiceRole": "cdk-rekognition-role",
                 "": "",
             },
         });
@@ -44,7 +39,7 @@ export class RekognitionStack extends cdk.Stack {
             timeout: cdk.Duration.seconds(60),
             memorySize: 128,
             handler: "imageRecognition.handler",
-            code: lambda.Code.fromAsset(path.join(__dirname, "../../assets/dist/imageRecognitionLambda/")),
+            code: lambda.Code.fromAsset(path.join(__dirname, "../../assets/dist/ImageRecognitionLambda/")),
             environment: {
                 "TABLE_NAME": table.tableName,
                 "SQS_QUEUE_URL": importedSqsUrl,
@@ -56,5 +51,79 @@ export class RekognitionStack extends cdk.Stack {
         lambdaFunctionImageRec.addEventSourceMapping("ImgRekognitionLambda", {
             eventSourceArn: importedSqsArn,
         });
+
+        const rekognitionStatement = new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: ["rekognition:DetectLabels"],
+            resources: ["*"],
+        });
+
+        lambdaFunctionImageRec.addToRolePolicy(rekognitionStatement);
+
+
+        const snsPermission = new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: [
+                "sns:Publish",
+            ],
+            resources: ["*"],
+        });
+
+        lambdaFunctionImageRec.addToRolePolicy(snsPermission);
+
+        const sqsPermission = new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: [
+                "sqs:ChangeMessageVisibility",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+                "sqs:ReceiveMessage",
+            ],
+            resources: ["*"],
+        });
+
+        lambdaFunctionImageRec.addToRolePolicy(sqsPermission);
+
+        table.grantReadData(lambdaFunctionImageRec);
+
+        const s3Permission = new iam.PolicyStatement({
+           effect: iam.Effect.ALLOW,
+           actions: [
+                "s3:get",
+           ],
+           resources: ["*"],
+        });
+
+        lambdaFunctionImageRec.addToRolePolicy(s3Permission);
+
+        const lambdaFunctionListImages = new lambda.Function(this, "listImages", {
+            functionName: "listImages",
+            runtime: lambda.Runtime.NODEJS_22_X,
+            timeout: cdk.Duration.seconds(60),
+            memorySize: 128,
+            handler: "listImages.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../../assets/dist/ListImagesLambda/")),
+            environment: {
+                "TABLE_NAME": table.tableName,
+            },
+        });
+
+        const api = new apigateway.RestApi(this, "REST_API", {
+            restApiName: "List Images Service",
+            cloudWatchRole: false,
+            description: "list images recognized",
+        });
+
+        const listImagesIntegration = new apigateway.LambdaIntegration(lambdaFunctionListImages, {
+            requestTemplates: {
+              "application/json": JSON.stringify({
+                  statusCode: "200",
+              }),
+            },
+        })
+
+        api.root.addMethod("GET", listImagesIntegration);
+        table.grantReadData(lambdaFunctionListImages);
     }
 }
