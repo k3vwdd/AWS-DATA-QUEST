@@ -1,7 +1,10 @@
 import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+import { unmarshall } from "@aws-sdk/util-dynamodb";
 import { APIGatewayEvent } from "aws-lambda";
 
-const dbClient = new DynamoDBClient();
+const ddbClient = new DynamoDBClient();
+const docClient = DynamoDBDocumentClient.from(ddbClient);
 const tableName = process.env.TABLE_NAME;
 
 async function listDbItems() {
@@ -10,10 +13,11 @@ async function listDbItems() {
     };
     const command = new ScanCommand(input);
     try {
-        const response = await dbClient.send(command);
+        const response = await docClient.send(command);
+        const items = response.Items?.map(item => unmarshall(item)) || [];
         return {
             statusCode: 200,
-            body: JSON.stringify(response.Items),
+            body: JSON.stringify(items),
         };
     } catch (error) {
         console.error("Couldn't connect to db", error);
