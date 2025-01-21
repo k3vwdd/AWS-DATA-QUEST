@@ -1,4 +1,5 @@
 import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
+import { SQSClient, DeleteMessageCommand } from "@aws-sdk/client-sqs";
 import { DynamoDBDocumentClient, PutCommand, PutCommandInput } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { RekognitionClient, DetectLabelsCommand } from "@aws-sdk/client-rekognition"
@@ -7,12 +8,13 @@ import { Rekognition } from "aws-sdk";
 
 const topicArn = process.env.TOPIC_ARN;
 const tableName = process.env.TABLE_NAME;
-// const queueUrl
+const queueUrl = process.env.SQS_QUEUE_URL?.trim();
 
 const rekClient = new RekognitionClient({});
 const dbClient = new DynamoDBClient({});
 const ddbDocClient = DynamoDBDocumentClient.from(dbClient);
 const snsClient = new SNSClient();
+const sqsClient = new SQSClient();
 
 
 async function detectLabels(bucket: string, key: string): Promise<Rekognition.Label[]> {
@@ -67,11 +69,32 @@ async function triggerSns(message: string) {
     };
 };
 
+async function deleteMesage(receiptHandle: string) {
+   try {
+       const input = {
+            QueueUrl: queueUrl,
+            ReceiptHandle: receiptHandle,
+       };
+       console.log(queueUrl);
+       const command = new DeleteMessageCommand(input);
+       const response = await sqsClient.send(command);
+       if (response.$metadata.httpStatusCode === 400) {
+            throw new Error("Error deleting queue message");
+       }
+   } catch (error) {
+        console.error("Someting went wrong with DeleteMesageCommand()", error);
+   };
+};
+
+
 export async function handler(event: SQSEvent) {
     console.log("Event recieved:", JSON.stringify(event, null, 2));
+    console.log(queueUrl);
+    console.log(tableName);
+    console.log(topicArn);
     try {
         for (let i = 0; i < event.Records.length; i++) {
-            //const receiptHandle = event.Records[i].receiptHandle; // use to delete sqs message
+            const receiptHandle = event.Records[i].receiptHandle;
             const parsedBody = JSON.parse(event.Records[i].body);
             //console.log(JSON.stringify(parsedBody));
 
@@ -98,6 +121,8 @@ export async function handler(event: SQSEvent) {
                 }
                 await storeDbResult(dbItem);
                 await triggerSns(JSON.stringify(dbResult));
+                console.log(`Deleting recieptHandle: ${receiptHandle}`);
+                await deleteMesage(receiptHandle);
                 }
         };
 
