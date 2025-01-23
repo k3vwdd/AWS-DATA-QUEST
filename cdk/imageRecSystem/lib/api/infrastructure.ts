@@ -86,11 +86,6 @@ export class APIStack extends cdk.Stack {
             exportName: "uploadQueueArn",
         });
 
-        new cdk.CfnOutput(this, "uploadSnsArn", {
-            value: uploadEventTopic.topicArn,
-            exportName: "uploadSnsArn",
-        });
-
     }
 }
 
