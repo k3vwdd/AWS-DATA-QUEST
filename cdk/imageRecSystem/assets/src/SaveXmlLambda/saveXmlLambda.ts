@@ -1,11 +1,12 @@
 import { S3Client , PutObjectCommand} from "@aws-sdk/client-s3";
 import { APIGatewayProxyEvent } from "aws-lambda";
 
-const bucket = process.env.BUCKET_NAME ?? "";
-const key = "integration.xml";
+const bucket = "test-integration-bucket-37223829"
+//const key = "integration.xml";
+const key = "integration2.xml";
 const s3Client = new S3Client();
 
-async function saveFileToS3(bucket: string, key: string, body: any) {
+async function saveFileToS3(bucket: string, key: string, body: string) {
     try {
         const command = new PutObjectCommand({
             Bucket: bucket,
@@ -14,11 +15,11 @@ async function saveFileToS3(bucket: string, key: string, body: any) {
         });
         const response = await s3Client.send(command);
         if (!response) {
-            throw new Error("Upload command failed");
+            throw Error;
         }
     } catch (error) {
-        console.error("error out here you heard");
-        throw new Error("Upload Failed");
+        console.error("Failed uploading Object into Bucket => ", error);
+        throw error;
     }
 }
 

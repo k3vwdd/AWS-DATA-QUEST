@@ -1,5 +1,5 @@
 import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
-import { APIGatewayEvent, SQSEvent } from "aws-lambda";
+import { SQSEvent } from "aws-lambda";
 import { SessionManagerParameterValue } from "aws-sdk/clients/ssm";
 
 const ssmClient = new SSMClient();
@@ -43,7 +43,7 @@ async function xmlPost(xmlString: string) {
         const response = await fetch(thirdPartyUrl, {
             method: "POST",
             headers: {
-                "Content-Type": "application/xml",
+                "Content-Type": "application/json",
             },
             body: xmlString,
         });
@@ -54,41 +54,36 @@ async function xmlPost(xmlString: string) {
     }
 }
 
-export async function handler(event: APIGatewayEvent) {
+export async function handler(event: SQSEvent) {
     try {
-        console.log(`Event Recieved: ${JSON.stringify(event, null, 2)}`);
-        if (!event.body) {
-            throw new Error("no body found in request");
-        };
+        console.log('Received event:', JSON.stringify(event, null, 2));
 
-        const data = typeof event.body === "string" ? JSON.parse(event.body) : event.body;
-
-        const xmlString = await jsonToXml(data);
-        console.log("XML to post:", xmlString);
+        const xmlString = await jsonToXml(event);
         const response = await xmlPost(xmlString);
-        console.log("Post response:", response);
+
+        console.log('Post response:', response);
 
         return {
             statusCode: 200,
-            header: {
-                "Content-Type": "application/json"
+            headers: {
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                message: "xml posted",
+                message: "XML posted successfully",
                 status: response.status
-            }),
+            })
         };
     } catch (error) {
-        console.log(error);
+        console.error('Handler error:', error);
         return {
             statusCode: 500,
             headers: {
-                "Content-Type": "application/json"
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                message: "error process request",
-                status: error instanceof Error ? error.message : "Uknown error"
-            }),
-        }
+                message: "Error processing request",
+                error: error instanceof Error ? error.message : 'Unknown error'
+            })
+        };
     }
 }

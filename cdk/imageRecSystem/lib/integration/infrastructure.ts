@@ -43,39 +43,14 @@ export class IntegrationStack extends cdk.Stack {
             cloudWatchRole: true,
             description: "Mocks a 3rdParty integration server.",
             deploy: true,
-//            defaultCorsPreflightOptions: {
-//                allowOrigins: api.Cors.ALL_ORIGINS,
-//                allowMethods: api.Cors.ALL_METHODS,
-//                allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key']
-//            }
         });
 
         const postXmlFileIntegration = new api.LambdaIntegration(saveXmlLambda, {
-//            requestTemplates: {
-//                'application/xml': '$input.body'
-//            },
-//            integrationResponses: [{
-//                statusCode: '200',
-//                responseParameters: {
-//                    'method.response.header.Content-Type': "'application/xml'",
-//                    'method.response.header.Access-Control-Allow-Origin': "'*'"
-//                }
-//            }]
         });
 
-        mockThirdPartyAPI.root.addMethod("POST", postXmlFileIntegration, {
-//            methodResponses: [{
-//                statusCode: '200',
-//                responseModels: {
-//                    'application/xml': api.Model.EMPTY_MODEL
-//                },
-//                responseParameters: {
-//                    'method.response.header.Content-Type': true,
-//                    'method.response.header.Access-Control-Allow-Origin': true
-//                }
-//            }]
-        });
-        const intergrationLambdaFunction = new lambda.Function(this, "IntergrationLambdaFunction", {
+        mockThirdPartyAPI.root.addMethod("POST", postXmlFileIntegration, {});
+
+        const integrationLambdaFunction = new lambda.Function(this, "IntegrationLambdaFunction", {
             functionName: "intergrationLambdaFunction",
             runtime: lambda.Runtime.NODEJS_22_X,
             timeout: cdk.Duration.seconds(60),
@@ -85,7 +60,40 @@ export class IntegrationStack extends cdk.Stack {
         });
 
         const invokeEventSource = new lambdaEvents.SqsEventSource(rekognitionQueue);
-        intergrationLambdaFunction.addEventSource(invokeEventSource);
+        integrationLambdaFunction.addEventSource(invokeEventSource);
+
+        const integrationLambdaFunctionPolicy = new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: [
+                "sqs:ChangeMessageVisibility",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+                "sqs:ReceiveMessage"
+            ],
+        });
+
+        const saveS3Policy = new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: [
+                "s3:Abort*",
+                "s3:DeleteObject*",
+                "s3:GetBucket*",
+                "s3:GetObject*",
+                "s3:List*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging"
+            ],
+            resources: [
+                "Insert bucket arn",
+                "Insert bucket arn/*"
+            ],
+        });
+
+        saveXmlLambda.addToRolePolicy(saveS3Policy);
 
         // SSM Parameter Store permissions
         const ssmPolicy = new iam.PolicyStatement({
@@ -96,7 +104,7 @@ export class IntegrationStack extends cdk.Stack {
             resources: ["*"],
         });
 
-        intergrationLambdaFunction.addToRolePolicy(ssmPolicy);
+        integrationLambdaFunction.addToRolePolicy(ssmPolicy);
 
         new cdk.CfnOutput(this, 'ThirdPartyAPIUrl', {
             value: mockThirdPartyAPI.url,

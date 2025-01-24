@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import * as cdk from "aws-cdk-lib";
-//import { IntegrationStack } from '../lib/integration/infrastructure';
+import { IntegrationStack } from '../lib/integration/infrastructure';
 import { APIStack } from "../lib/api/infrastructure";
 import { RekognitionStack } from "../lib/recognition/infrastructure";
 
@@ -11,12 +11,13 @@ const apiStack = new APIStack(app, "APIStack", {
     env: { region: CDK_DEFAULT_REGION },
 });
 
-//const integrationStack = new IntegrationStack(app, 'IntegrationStack', {
-//   env: { region: CDK_DEFAULT_REGION },
-//});
+const integrationStack = new IntegrationStack(app, 'IntegrationStack', {
+   env: { region: CDK_DEFAULT_REGION },
+});
 
-// In Api stack needed to public readonly export see APIStack infra.ts
-// needed to create a RekognitionStack interface that extended props
 const rekognitionStack = new RekognitionStack(app, "RekognitionStack", {
     env: { region: CDK_DEFAULT_REGION },
 });
+
+rekognitionStack.addDependency(integrationStack);
+rekognitionStack.addDependency(apiStack);
